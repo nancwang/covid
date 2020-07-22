@@ -11,6 +11,8 @@ import pprint
 import datetime
 import requests
 import argparse
+import textwrap
+import datetime
 
 
 
@@ -261,18 +263,20 @@ class jsonStyle:
                5 : "utlas",
                6 : "hotSpots",
                7 : "topList",
-               8 : 'pprint'}
+               8 : 'pprint',
+               9 : "downloadFile"}
     
-        st=[2,3,4,5,6,7]
+        st=[] #[2,3,4,5,6,7,8]
+        for e in options:
+            st.append(e)
+
         if v not in st:
-            for e in options:
-                print(e, options[e])
+            #for e in options:
+                #print(e, options[e])
             v=int(input("Select num to run: "))
         if v not in st:
             sys.exit()
-        
-
-    
+            
         if v == 2:
             self.ltlas(json_data)
         if v == 3:
@@ -287,13 +291,21 @@ class jsonStyle:
             self.topList(json_data)
         if v == 8:  # pretty print out
             pprint.pprint(json_data)
+        if v == 9:
+            now = datetime.datetime.now()
+            fn="coronavirus-cases_latest_{0}.json".format(now.strftime('%y%m%d%H%M'))
+            fh = open(fn,'wb')
+            if isinstance(data,str):
+                fh.write(data.encode())
+            else:
+                fh.write(data)
+            fh.close()
 
- 
 
-
-def xmlfile(fn, st, st2):
+def csvfile(fn, st, st2):
     fh=open(fn, 'r')
     lines=fh.readlines()
+    fh.close()
 
     #print(fn,st)
     print(lines[0])
@@ -303,94 +315,50 @@ def xmlfile(fn, st, st2):
             li = l.split(',')
             print(li[3], li[7])
 
-def jsonfile(fn, areas):
-    with open(fn, 'r') as f:
-        data = f.read()
-        json_data = json.loads(data)
-
-    #pa=["metadata","dailyRecords","ltlas","countries","regions","utlas"]
-    options = {2 : "ltlas",
-               3 : "countries",
-               4 : "regions",
-               5 : "utlas",
-               6 : "hotSpots",
-               7 : "hotSpots",
-               8 : "pprint"}
-    for e in options:
-        print(e, options[e])
-    
-    st='23456'
-    v=input("Select num to run: ")
-    if v not in st:
-        sys.exit()
-    
-    
-    #regions=json_data('regions')
-    j=jsonStyle()
-    if v == '2':
-        j.ltlas(json_data)
-    if v == '3':
-        j.countries(json_data)
-    if v == '4':
-        j.regions(json_data)
-    if v == '5':
-        j.utlas(json_data)
-    if v == '6':
-        j.hotSpots(json_data)
-    if v == '7':
-        j.topList(json_data)
-    if v == '8':  # pretty print out
-        pprint.pprint(json_data)
-
 
 ###### Start from here ############
-parser = argparse.ArgumentParser()
-parser.add_argument('--area',  action='append', default=[], help='Option, give a place name in England to highlight the result, eg. Windsor')
-parser.add_argument('--fname',  help='Option, give a file name either json or cvs')
-parser.add_argument('value', metavar='N', type=int, nargs='?', default=6,
-                    help="an integer for selection: 2 : ltlas, 3 : countries' 4 : regions, 5 : utlas, 6 : hotSpots, 7 : hotSpots, 8 : pprint")
-args = parser.parse_args()
+# this means that if this script is executed, then 
+# main() will be executed
+if __name__ == '__main__':
+    #parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+      prog='ProgramName',
+      formatter_class=argparse.RawDescriptionHelpFormatter,
+      epilog=textwrap.dedent('''\
+         additional information:
+             2 : ltlas
+             3 : countries 
+             4 : regions, 
+             5 : utlas, 
+             6 : hotSpots, 
+             7 : hotSpots, 
+             8 : pprint, 
+             9 : fileDownload
+         '''))
+    parser.add_argument('--area',  action='append', default=[], help='Option, give a place name in England to highlight the result, eg. Windsor')
+    parser.add_argument('--fname',  help='Option, give a file name either json or cvs')
+    parser.add_argument('value', metavar='N', type=int, nargs='?', default=6,
+                    help="an integer used for selection of some features: See additional information below")
+    args = parser.parse_args()
 
 
 
-if len(args.area)>0:
-    print("Will try to show results for {} if exists".format(args.area))
+    if len(args.area)>0:
+        print("Will try to show results for {} if exists".format(args.area))
 
+    data=""
+    if args.fname:
+        with open(args.fname, 'r') as f:
+            data = f.read()
+    else:
+        url = 'https://c19downloads.azureedge.net/downloads/json/coronavirus-cases_latest.json'
+        r = requests.get(url, allow_redirects=True)
 
-if args.fname:
-    jsonfile(args.fname, args.area, args.value)
-else:
-    url = 'https://c19downloads.azureedge.net/downloads/json/coronavirus-cases_latest.json'
-    r = requests.get(url, allow_redirects=True)
-
-    data = r.content
+        data = r.content
 
     j=jsonStyle(args.area,args.value)
     j.jsonFromUrl(data,args.value)
     sys.exit()
 
-
-
-'''if len(sys.argv) <2:
-    sys.exit()
-
-fn=sys.argv[1]
-
-st=""
-if len(sys.argv) >= 3:
-    st=sys.argv[2]
-st2="Upper"
-
-if len(sys.argv) >= 4:
-    st2 = sys.argv[3]
-
-filename, file_extension = os.path.splitext(fn)
-
-if "csv" in file_extension:
-    if len(st) > 0:
-        xmlfile(fn,st,st2)
-elif "json" in file_extension:
-    jsonfile(fn)
-    '''
 
 
