@@ -301,6 +301,15 @@ class jsonStyle:
                 fh.write(data)
             fh.close()
 
+def saveFile(fn,d):
+    now = datetime.datetime.now()
+    fn=fn+"_{0}.json".format(now.strftime('%y%m%d%H%M'))
+    fh = open(fn,'wb')
+    if isinstance(d,str):
+        fh.write(d.encode())
+    else:
+        fh.write(d)
+    fh.close()
 
 def csvfile(fn, st, st2):
     fh=open(fn, 'r')
@@ -315,6 +324,49 @@ def csvfile(fn, st, st2):
             li = l.split(',')
             print(li[3], li[7])
 
+# test function
+def dataBreakdown(json_data, k):
+    area = json_data[k]
+
+    dic={}
+
+    for e in area:
+        if e['areaCode'] in dic:
+            break
+        dic[e['areaCode']] = e['areaName']
+    
+    reg_num = len(dic)
+    r=[]
+    for e in range(reg_num):
+        r.append(area[e]['areaName'])
+
+    r = sorted(r)
+    for e in range(len(r)):
+        if e%2 == 1:
+            print("{:4} {:35}".format( e, r[e]))
+        else:
+            print("{:4} {:35}".format( e, r[e]),end='')
+
+    n=0
+    s_name=input("\nplease select number for the area or type the name of the area you know: ")
+    t=-1
+
+    if s_name.isdigit():
+        t=int(s_name)
+        if t < len(r) and t> -1:
+            s_name=r[t]
+            
+    print("History result for " + s_name +": " )
+    print('{:11} {:5} {:7}'.format('Date', 'Daily',  'Total'))
+    for e in range(len(area)):
+        if  s_name.lower() in area[e]['areaName'].lower() : #area[e]['areaName'] == s_name or
+            n=n+1
+            try:
+                print( '{:11} {:5} {:7}'.format(area[e]['reportingDate'], area[e]['dailyChangeInDeaths'], area[e]['cumulativeDeaths']))
+            except:
+                continue
+    
+    print(n)
 
 ###### Start from here ############
 # this means that if this script is executed, then 
@@ -337,6 +389,7 @@ if __name__ == '__main__':
          '''))
     parser.add_argument('--area',  action='append', default=[], help='Option, give a place name in England to highlight the result, eg. Windsor')
     parser.add_argument('--fname',  help='Option, give a file name either json or cvs')
+    parser.add_argument('--fatal',  help='Option, to get death rate', action="store_true")
     parser.add_argument('value', metavar='N', type=int, nargs='?', default=6,
                     help="an integer used for selection of some features: See additional information below")
     args = parser.parse_args()
@@ -351,14 +404,41 @@ if __name__ == '__main__':
         with open(args.fname, 'r') as f:
             data = f.read()
     else:
-        url = 'https://c19downloads.azureedge.net/downloads/json/coronavirus-cases_latest.json'
+        if args.fatal :
+            url = 'https://c19downloads.azureedge.net/downloads/json/coronavirus-deaths_latest.json'
+        else:
+            url = 'https://c19downloads.azureedge.net/downloads/json/coronavirus-cases_latest.json'
         r = requests.get(url, allow_redirects=True)
 
         data = r.content
 
-    j=jsonStyle(args.area,args.value)
-    j.jsonFromUrl(data,args.value)
-    sys.exit()
+    json_data = json.loads(data)
+    if args.fatal or len(json_data.keys())==3:
+        pass
+    else:
+        j=jsonStyle(args.area,args.value)
+        j.jsonFromUrl(data,args.value)
+        sys.exit()
+        
 
+    # death rate analysing
+    # json_data.keys(): ['metadata', 'countries', 'overview']
+    if(args.value == 9):
+        saveFile("coronavirus-deaths_latest",data)
+        sys.exit()
+
+    choice = input("\nType return to see UK result. Type any key to see each country")
+    if(len(choice)>0):
+        dataBreakdown(json_data,'countries')
+    else:
+        dataBreakdown(json_data,'overview')
+    sys.exit()
+    
+
+    
+
+
+# https://c19downloads.azureedge.net/downloads/json/coronavirus-deaths_latest.json
+#url = 'https://c19downloads.azureedge.net/downloads/json/coronavirus-cases_latest.json'
 
 
