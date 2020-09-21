@@ -106,15 +106,20 @@ if __name__ == "__main__":
     query_filters = [
         f"areaType="+ args.type.lower(),  #region"  #utla #nation or ltla
     ]
+    
+    a=""
 
     if args.area !=None:
         for e in ltlaArea:
             if args.area.lower() in e.lower():
-                print("Will try to show history results for {} if it exists".format(args.area))
-                query_filters.append(f"areaName="+e)
+                a=e
                 break
-        #print("Will try to show history results for {} if it exists".format(args.area))
-        #query_filters.append(f"areaName="+args.area)
+        
+        print("Will try to show history results for {} if it exists".format(args.area))
+        if a == "":
+            a=args.area
+            
+        query_filters.append(f"areaName="+a)
 
         #f"areaName="+args.area #example: Oxford", "Windsor and Maidenhead"
         #f"areaCode=E06000040"  #Search from area code York:E06000014, 
