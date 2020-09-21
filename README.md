@@ -1,6 +1,6 @@
 # covid
 
-The app is used to track latest hotspots/clusters of covid 19 cases in England only and the data is fetched from https://coronavirus.data.gov.uk/cases.
+The app is used to track latest hotspots/clusters of covid 19 cases in UK only and the data is fetched from https://coronavirus.data.gov.uk/cases.
 To get the latest data, please use covid2.py. The link from covid.py will not fetch latest data. It might still work with history data.
 
 Usage for covid2.py:
@@ -17,8 +17,8 @@ positional arguments:
 
 optional arguments:
   -h, --help   show this help message and exit
-  --area AREA  Give a place name in England to highlight the result in
-               history, eg. Oxford
+  --area AREA  Give a place name in UK to highlight the result in
+               history, eg. Oxford or Edinburgh
   --type TYPE  Option, give a area type, ltla, utla, region, or nation
 
 
