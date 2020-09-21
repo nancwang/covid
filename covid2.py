@@ -1,5 +1,6 @@
 from typing import Iterable, Dict, Union, List
 from json import dumps
+import csv
 from requests import get
 from http import HTTPStatus
 import argparse
@@ -93,7 +94,19 @@ def get_paginated_dataset(filters: FiltersType, structure: StructureType,
     # Concatenating CSV pages
     return str.join("\n", data)
 
-
+def yes_no(answer):
+    yes = set(['yes','y', 'ye', ''])
+    no = set(['no','n'])
+     
+    while True:
+        choice = input(answer + " ? ").lower()
+        if choice in yes:
+           return True
+        elif choice in no:
+           return False
+        else:
+           print("Please respond with yes or no")
+           
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--area', help='Give a place name in England to highlight the result in history, eg. Oxford')
@@ -107,18 +120,27 @@ if __name__ == "__main__":
         f"areaType="+ args.type.lower(),  #region"  #utla #nation or ltla
     ]
     
+    li=[]
     a=""
 
     if args.area !=None:
         for e in ltlaArea:
             if args.area.lower() in e.lower():
-                a=e
-                break
+                li.append(e)
         
         print("Will try to show history results for {} if it exists".format(args.area))
-        if a == "":
+        if len(li)== 0:
             a=args.area
-            
+        elif len(li) == 1:
+            a=li[0]
+        else:
+            for e in li:
+                if yes_no(e) == True:
+                    a=e
+                    break
+                
+        if a=="":
+            a=args.area
         query_filters.append(f"areaName="+a)
 
         #f"areaName="+args.area #example: Oxford", "Windsor and Maidenhead"
@@ -158,9 +180,8 @@ if __name__ == "__main__":
     if l > len(csv_lines):
         l= len(csv_lines)
     for e in csv_lines[:l]:
-        l = e.split(',')
+        l = [ '{}'.format(x) for x in list(csv.reader([e], delimiter=',', quotechar='"'))[0] ] #re.split(r',(?=")', e)  #e.split(',')
         if len(l) == 5:
-            print('{:12} {:24} {:12} {:7} {:7}'.format(l[0], l[1], l[2],l[3], l[4]))
+            print('{:12} {:38} {:12} {:7} {:7}'.format(l[0], l[1], l[2],l[3], l[4]))
         else:
             print(e)
-        
