@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     if args.area !=None:
         for e in ltlaArea:
-            if args.area in e:
+            if args.area.lower() in e.lower():
                 print("Will try to show history results for {} if it exists".format(args.area))
                 query_filters.append(f"areaName="+e)
                 break
