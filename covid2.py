@@ -5,6 +5,7 @@ from requests import get
 from http import HTTPStatus
 import argparse
 import sys, os
+from datetime import date
 
 
 StructureType = Dict[str, Union[dict, str]]
@@ -110,7 +111,8 @@ def yes_no(answer):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--area', help='Give a place name in England to highlight the result in history, eg. Oxford')
-    parser.add_argument('--type', default='ltla', help='Option, give a area type, ltla, utla, region, or nation')
+    parser.add_argument('--type', default='ltla', help='Option, give a area type: ltla, utla, region, nhsRegion nation or overview')
+    parser.add_argument('--outFile', help='Option, give an out put file name')
     parser.add_argument('value', metavar='N', type=int, nargs='?', default=10,
                     help="an integer for showing the days in history")
 
@@ -120,6 +122,7 @@ if __name__ == "__main__":
         f"areaType="+ args.type.lower(),  #region"  #utla #nation or ltla
     ]
     
+    outFile=date.today().strftime("%y%m%d") +".csv"
     li=[]
     a=""
 
@@ -134,6 +137,7 @@ if __name__ == "__main__":
         elif len(li) == 1:
             a=li[0]
         else:
+            print("Found {} areas might match the place from your input {}: \n{}".format(len(li), args.area, li))
             for e in li:
                 if yes_no(e) == True:
                     a=e
@@ -142,6 +146,7 @@ if __name__ == "__main__":
         if a=="":
             a=args.area
         query_filters.append(f"areaName="+a)
+        outFile= args.area + "_"+ outFile #os.path.abspath(os.getcwd())   #f=open(os.path.join(fh, 'Analize_'+ft),'w')  #date.today().strftime("%y%m%d")
 
         #f"areaName="+args.area #example: Oxford", "Windsor and Maidenhead"
         #f"areaCode=E06000040"  #Search from area code York:E06000014, 
@@ -176,12 +181,20 @@ if __name__ == "__main__":
         print("Can not find data for the area " + args.area)
         print("Go to https://coronavirus.data.gov.uk/cases to find the area name covered")
         sys.exit()
+        
+    outFile = os.path.join(os.path.abspath(os.getcwd()),args.type+"_"+outFile)
+    print("There is an out put file for you: "+ outFile)
+    f=open(outFile, 'w')
+    f.write(csv_data)
+    print("---" * 10)
+    f.close()
     l = args.value+1
     if l > len(csv_lines):
         l= len(csv_lines)
+    areaNamLen = len(a) + 2
     for e in csv_lines[:l]:
         l = [ '{}'.format(x) for x in list(csv.reader([e], delimiter=',', quotechar='"'))[0] ] #re.split(r',(?=")', e)  #e.split(',')
         if len(l) == 5:
-            print('{:12} {:38} {:12} {:7} {:7}'.format(l[0], l[1], l[2],l[3], l[4]))
+            print(('{:12} {:{}} {:12} {:7} {:7}').format(l[0], l[1],areaNamLen, l[2],l[3], l[4]))
         else:
             print(e)
